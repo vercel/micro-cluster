@@ -1,0 +1,80 @@
+#!/usr/bin/env node
+
+import program from 'commander'
+import { parse as parseUrl } from 'url'
+import { dirname, resolve } from 'path'
+import { readFile } from 'mz/fs'
+import { spawn } from 'mz/child_process'
+import micro from 'micro-core'
+import { createProxyServer } from 'http-proxy'
+import getPort from 'get-port'
+import { version } from '../../package'
+
+program
+.version(version)
+.option('-p, --port <port>', 'Port to listen on (3000)', parseInt)
+.parse(process.argv)
+
+const programPort = program.port || 3000
+let file = program.args[0] || 'app.json'
+file = resolve(process.cwd(), file)
+
+readFile(file, 'utf8')
+.then(async (data) => {
+  const config = JSON.parse(data)
+  const mappings = new Map()
+
+  for (const route of Object.keys(config)) {
+    let path = config[route]
+    let port
+    let env
+
+    if ('string' !== typeof path) {
+      path = path.path
+      port = path.port
+      env = path.env
+    }
+
+    if (!port) port = await getPort()
+    path = resolve(dirname(file), path)
+
+    const opts = { env, stdio: 'inherit', customFds: [0, 1, 2] }
+    await spawn(resolve(__dirname, 'micro'), ['--port', port, path], opts)
+    mappings.set(route, port)
+  }
+
+  const proxy = createProxyServer()
+
+  micro(async (req, res) => {
+    const parsed = parseUrl(req.url)
+    const { pathname } = parsed
+
+    const match = [...mappings].some(([route, port]) => {
+      if (!pathname.startsWith(route)) return
+
+      const rest = pathname.slice(route.length)
+      if (rest && '/' !== rest[0]) return
+
+      const target = `http://localhost:${port}${rest}${parsed.search || ''}`
+      proxy.web(req, res, { target, ignorePath: true })
+      return true
+    })
+
+    if (!match) {
+      res.writeHead(404)
+      res.end('Not found')
+      return
+    }
+  }).listen(programPort, (err) => {
+    if (err) {
+      console.error(err.stack)
+      process.exit(1)
+    }
+
+    console.log(`> \u001b[96mReady!\u001b[39m Listening on ${programPort}.`)
+  })
+}).catch((err) => {
+  process.nextTick(() => {
+    throw err
+  })
+})

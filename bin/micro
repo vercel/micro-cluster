@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+
+import program from 'commander'
+import micro from 'micro-core'
+
+program
+.option('-p, --port <port>', 'Port to listen on (3000)', parseInt)
+.parse(process.argv)
+
+const port = program.port || 3000
+const file = program.args[0]
+
+const mod = require(file).default
+
+micro(mod).listen(port, (err) => {
+  if (err) {
+    console.error(err.stack)
+    process.exit(1)
+  }
+})
