@@ -30,9 +30,9 @@ readFile(file, 'utf8')
     let env
 
     if ('string' !== typeof path) {
-      path = path.path
       port = path.port
       env = path.env
+      path = path.path
     }
 
     if (!port) port = await getPort()
