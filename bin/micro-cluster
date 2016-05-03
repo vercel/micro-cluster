@@ -27,11 +27,11 @@ readFile(file, 'utf8')
   for (const route of Object.keys(config)) {
     let path = config[route]
     let port
-    let env
+    let { env } = process
 
     if ('string' !== typeof path) {
       port = path.port
-      env = path.env
+      env = Object.assign({}, env, path.env)
       path = path.path
     }
 
