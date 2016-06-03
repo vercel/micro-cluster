@@ -23,7 +23,7 @@
     "commander": "2.9.0",
     "get-port": "2.1.0",
     "http-proxy": "1.13.2",
-    "micro-core": "0.1.0",
+    "micro-core": "0.3.0",
     "mz": "2.4.0"
   },
   "devDependencies": {
