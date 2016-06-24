@@ -55,12 +55,16 @@ async function main () {
   const proxyServer = createProxyServer()
   const locations = Object.keys(config.locations)
   .map((l) => {
-    const location = config.locations[l]
-    const rewrite = [
-      new RegExp(location.rewrite[0].replace(/\//, '//')),
+    let location = config.locations[l]
+    if ('string' === typeof location) {
+      location = { proxy: location }
+    }
+
+    const rewrite = location.rewrite && [
+      new RegExp(location.rewrite[0].replace(/\//, '\\/')),
       ...location.rewrite.slice(1)
     ]
-    const match = new RegExp(l.replace(/\//g, '//'))
+    const match = new RegExp(l.replace(/\//g, '\\/'))
     return Object.assign({}, location, { rewrite, match })
   })
 
@@ -70,8 +74,9 @@ async function main () {
     for (const { match, rewrite, proxy } of locations) {
       if (!match.test(pathname)) continue
 
-      const newPathname = pathname.replace.apply(pathname, rewrite)
-      const port = services[proxy]
+      const newPathname = rewrite
+        ? pathname.replace.apply(pathname, rewrite) : pathname
+      const port = services.get(proxy)
 
       const target = `http://localhost:${port}${newPathname}${search || ''}`
       proxyServer.web(req, res, { target, ignorePath: true })
