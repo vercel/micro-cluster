@@ -19,6 +19,7 @@ export default {
   locations: {
     '^/path-regex/to/serve/?$': {
       rewrite: ['^(.*)$', '$1/rewritten'],
+      proxySetHeaders: { 'X-CUSTOM-HEADER': '1' },
       proxy: 'myService'
     }
     '^/woot/?$': 'woot'

@@ -60,23 +60,37 @@ async function main () {
       location = { proxy: location }
     }
 
-    const rewrite = location.rewrite && [
-      new RegExp(location.rewrite[0].replace(/\//, '\\/')),
-      ...location.rewrite.slice(1)
-    ]
+    const rewrite = location.rewrite
+      ? [
+        new RegExp(location.rewrite[0].replace(/\//, '\\/')),
+        ...location.rewrite.slice(1)
+      ] : null
+
     const match = new RegExp(l.replace(/\//g, '\\/'))
     return Object.assign({}, location, { rewrite, match })
+  })
+
+  proxyServer.on('proxyReq', (proxyReq, req) => {
+    if (req.proxySetHeaders) {
+      Object.keys(req.proxySetHeaders).forEach((key) => {
+        proxyReq.setHeader(key, req.proxySetHeaders[key])
+      })
+    }
   })
 
   micro(async (req, res) => {
     const { pathname, search } = parseUrl(req.url)
 
-    for (const { match, rewrite, proxy } of locations) {
+    for (const { match, rewrite, proxy, proxySetHeaders } of locations) {
       if (!match.test(pathname)) continue
 
       const newPathname = rewrite
         ? pathname.replace.apply(pathname, rewrite) : pathname
       const port = services.get(proxy)
+
+      if (proxySetHeaders) {
+        req.proxySetHeaders = proxySetHeaders
+      }
 
       const target = `http://localhost:${port}${newPathname}${search || ''}`
       proxyServer.web(req, res, { target, ignorePath: true })
