@@ -4,21 +4,31 @@ Run multiple `micro` servers and a front proxy at a time, with a simple configur
 
 ## Example
 
-Create a json file like the following.
+Create a config file like the following.
 
-```json
-{
-  "/path-to-serve": {
-    "path": "index.js",
-    "env": { "NODE_ENV": "production" }
+```js
+export default {
+  services: {
+    myService: {
+      path: 'index.js',
+      env: { NODE_ENV: 'production' }
+    },
+    woot: 'woot.js'
   },
-  "/woot": "woot.js"
+
+  locations: {
+    '^/path-regex/to/serve/?$': {
+      rewrite: ['^(.*)$', '$1/rewritten'],
+      proxy: 'myService'
+    }
+    '^/woot/?$': 'woot'
+  }
 }
 ```
 
 Run servers.
 
 ```bash
-$ micro-cluster -p 3000 app.json
+$ micro-cluster -p 3000 app.js
 ```
 

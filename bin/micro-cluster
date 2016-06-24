@@ -3,12 +3,19 @@
 import program from 'commander'
 import { parse as parseUrl } from 'url'
 import { dirname, resolve } from 'path'
-import { readFile } from 'mz/fs'
 import { spawn } from 'mz/child_process'
 import micro from 'micro-core'
 import { createProxyServer } from 'http-proxy'
 import getPort from 'get-port'
+import babelRegister from 'babel-register'
+import presetES2015 from 'babel-preset-es2015'
+import transformAsyncToGenerator from 'babel-plugin-transform-async-to-generator'
 import { version } from '../../package'
+
+babelRegister({
+  presets: [presetES2015],
+  plugins: [transformAsyncToGenerator]
+})
 
 program
 .version(version)
@@ -16,55 +23,63 @@ program
 .parse(process.argv)
 
 const programPort = program.port || 3000
-let file = program.args[0] || 'app.json'
-file = resolve(process.cwd(), file)
+const file = resolve(process.cwd(), program.args[0] || 'app.js')
 
-readFile(file, 'utf8')
-.then(async (data) => {
-  const config = JSON.parse(data)
-  const mappings = new Map()
+main()
+.catch((err) => {
+  process.nextTick(() => {
+    throw err
+  })
+})
 
-  for (const route of Object.keys(config)) {
-    let path = config[route]
-    let port
-    let { env } = process
+async function main () {
+  const config = require(file).default
+  const services = new Map()
 
-    if ('string' !== typeof path) {
-      port = path.port
-      env = Object.assign({}, env, path.env)
-      path = path.path
+  for (const id of Object.keys(config.services)) {
+    let service = config.services[id]
+    if ('string' === typeof service) {
+      service = { path: service }
     }
 
-    if (!port) port = await getPort()
-    path = resolve(dirname(file), path)
+    const path = resolve(dirname(file), service.path)
+    const env = service.env
+      ? Object.assign({}, process.env, service.env) : process.env
+    const port = service.port || await getPort()
 
     const opts = { env, stdio: 'inherit', customFds: [0, 1, 2] }
     await spawn(resolve(__dirname, 'micro'), ['--port', port, path], opts)
-    mappings.set(route, port)
+    services.set(id, port)
   }
 
-  const proxy = createProxyServer()
+  const proxyServer = createProxyServer()
+  const locations = Object.keys(config.locations)
+  .map((l) => {
+    const location = config.locations[l]
+    const rewrite = [
+      new RegExp(location.rewrite[0].replace(/\//, '//')),
+      ...location.rewrite.slice(1)
+    ]
+    const match = new RegExp(l.replace(/\//g, '//'))
+    return Object.assign({}, location, { rewrite, match })
+  })
 
   micro(async (req, res) => {
-    const parsed = parseUrl(req.url)
-    const { pathname } = parsed
+    const { pathname, search } = parseUrl(req.url)
 
-    const match = [...mappings].some(([route, port]) => {
-      if (!pathname.startsWith(route)) return
+    for (const { match, rewrite, proxy } of locations) {
+      if (!match.test(pathname)) continue
 
-      const rest = pathname.slice(route.length)
-      if (rest && '/' !== rest[0]) return
+      const newPathname = pathname.replace.apply(pathname, rewrite)
+      const port = services[proxy]
 
-      const target = `http://localhost:${port}${rest}${parsed.search || ''}`
-      proxy.web(req, res, { target, ignorePath: true })
-      return true
-    })
-
-    if (!match) {
-      res.writeHead(404)
-      res.end('Not found')
+      const target = `http://localhost:${port}${newPathname}${search || ''}`
+      proxyServer.web(req, res, { target, ignorePath: true })
       return
     }
+
+    res.writeHead(404)
+    res.end('Not found')
   }).listen(programPort, (err) => {
     if (err) {
       console.error(err.stack)
@@ -73,8 +88,4 @@ readFile(file, 'utf8')
 
     console.log(`> \u001b[96mReady!\u001b[39m Listening on ${programPort}.`)
   })
-}).catch((err) => {
-  process.nextTick(() => {
-    throw err
-  })
-})
+}

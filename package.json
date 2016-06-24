@@ -14,12 +14,12 @@
       "es2015"
     ],
     "plugins": [
-      "syntax-async-functions",
       "transform-async-to-generator",
       "transform-runtime"
     ]
   },
   "dependencies": {
+    "babel-register": "6.9.0",
     "commander": "2.9.0",
     "get-port": "2.1.0",
     "http-proxy": "1.13.2",
