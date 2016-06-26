@@ -52,6 +52,9 @@ async function main () {
     services.set(id, port)
   }
 
+  // wait for starting servers
+  await sleep(500)
+
   const proxyServer = createProxyServer()
   const locations = Object.keys(config.locations)
   .map((l) => {
@@ -107,4 +110,8 @@ async function main () {
 
     console.log(`> \u001b[96mReady!\u001b[39m Listening on ${programPort}.`)
   })
+}
+
+async function sleep (ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
