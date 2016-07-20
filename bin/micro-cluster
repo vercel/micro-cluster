@@ -53,7 +53,7 @@ async function main () {
   }
 
   // wait for starting servers
-  await sleep(500)
+  await sleep(1000)
 
   const proxyServer = createProxyServer()
   const locations = Object.keys(config.locations)
