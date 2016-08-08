@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import program from 'commander'
-import micro from 'micro-core'
+import micro from 'micro'
 
 program
-.option('-p, --port <port>', 'Port to listen on (3000)', parseInt)
-.parse(process.argv)
+  .option('-p, --port <port>', 'Port to listen on (3000)', parseInt)
+  .parse(process.argv)
 
 const port = program.port || 3000
 const file = program.args[0]
