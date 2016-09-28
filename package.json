@@ -30,7 +30,7 @@
     ]
   },
   "dependencies": {
-    "babel-register": "6.14.0",
+    "babel-register": "6.16.0",
     "commander": "2.9.0",
     "get-port": "2.1.0",
     "http-proxy": "1.15.1",
