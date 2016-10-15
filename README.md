@@ -1,5 +1,7 @@
 # micro-cluster
 
+[![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
+
 Run multiple `micro` servers and a front proxy at a time, with a simple configuration file.
 
 ## Example
@@ -32,4 +34,3 @@ Run servers.
 ```bash
 $ micro-cluster -p 3000 app.js
 ```
-

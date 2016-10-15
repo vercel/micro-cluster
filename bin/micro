@@ -10,9 +10,10 @@ program
 const port = program.port || 3000
 const file = program.args[0]
 
+// eslint-disable-next-line import/no-dynamic-require
 const mod = require(file).default
 
-micro(mod).listen(port, (err) => {
+micro(mod).listen(port, err => {
   if (err) {
     console.error(err.stack)
     process.exit(1)

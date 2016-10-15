@@ -16,4 +16,4 @@ gulp.task('compile', () => {
 })
 
 gulp.task('clean', () => del(['dist']))
-gulp.task('default', ['lint', 'compile'])
+gulp.task('default', ['compile'])
