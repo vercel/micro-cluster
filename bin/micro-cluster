@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 
+import {parse as parseUrl} from 'url'
+import {dirname, resolve} from 'path'
 import program from 'commander'
-import { parse as parseUrl } from 'url'
-import { dirname, resolve } from 'path'
-import { spawn } from 'mz/child_process'
+import {spawn} from 'mz/child_process'
 import micro from 'micro'
-import { createProxyServer } from 'http-proxy'
+import {createProxyServer} from 'http-proxy'
 import getPort from 'get-port'
 import babelRegister from 'babel-register'
 import presetES2015 from 'babel-preset-es2015'
 import transformAsyncToGenerator from 'babel-plugin-transform-async-to-generator'
-import { version } from '../../package'
+// eslint-disable-next-line import/no-unresolved
+import {version} from '../../package'
 
 babelRegister({
   presets: [presetES2015],
@@ -26,28 +27,28 @@ const programPort = program.port || 3000
 const file = resolve(process.cwd(), program.args[0] || 'app.js')
 
 main()
-.catch((err) => {
+.catch(err => {
   process.nextTick(() => {
     throw err
   })
 })
 
-async function main () {
+async function main() {
+  // eslint-disable-next-line import/no-dynamic-require
   const config = require(file).default
   const services = new Map()
 
   for (const id of Object.keys(config.services)) {
     let service = config.services[id]
-    if ('string' === typeof service) {
-      service = { path: service }
+    if (typeof service === 'string') {
+      service = {path: service}
     }
 
     const path = resolve(dirname(file), service.path)
-    const env = service.env
-      ? Object.assign({}, process.env, service.env) : process.env
+    const env = service.env ? Object.assign({}, process.env, service.env) : process.env
     const port = service.port || await getPort()
 
-    const opts = { env, stdio: 'inherit', customFds: [0, 1, 2] }
+    const opts = {env, stdio: 'inherit', customFds: [0, 1, 2]}
     await spawn(resolve(__dirname, 'micro'), ['--port', port, path], opts)
     services.set(id, port)
   }
@@ -57,38 +58,39 @@ async function main () {
 
   const proxyServer = createProxyServer()
   const locations = Object.keys(config.locations)
-  .map((l) => {
+  .map(l => {
     let location = config.locations[l]
-    if ('string' === typeof location) {
-      location = { proxy: location }
+    if (typeof location === 'string') {
+      location = {proxy: location}
     }
 
-    const rewrite = location.rewrite
-      ? [
-        new RegExp(location.rewrite[0].replace(/\//, '\\/')),
-        ...location.rewrite.slice(1)
-      ] : null
+    const rewrite = location.rewrite ?
+      [new RegExp(location.rewrite[0].replace(/\//, '\\/')), ...location.rewrite.slice(1)] :
+      null
 
     const match = new RegExp(l.replace(/\//g, '\\/'))
-    return Object.assign({}, location, { rewrite, match })
+    return Object.assign({}, location, {rewrite, match})
   })
 
   proxyServer.on('proxyReq', (proxyReq, req) => {
     if (req.proxySetHeaders) {
-      Object.keys(req.proxySetHeaders).forEach((key) => {
+      Object.keys(req.proxySetHeaders).forEach(key => {
         proxyReq.setHeader(key, req.proxySetHeaders[key])
       })
     }
   })
 
   micro(async (req, res) => {
-    const { pathname, search } = parseUrl(req.url)
+    const {pathname, search} = parseUrl(req.url)
 
-    for (const { match, rewrite, proxy, proxySetHeaders } of locations) {
-      if (!match.test(pathname)) continue
+    for (const {match, rewrite, proxy, proxySetHeaders} of locations) {
+      if (!match.test(pathname)) {
+        continue
+      }
 
-      const newPathname = rewrite
-        ? pathname.replace.apply(pathname, rewrite) : pathname
+      const newPathname = rewrite ?
+        pathname.replace.apply(pathname, rewrite) :
+        pathname
       const port = services.get(proxy)
 
       if (proxySetHeaders) {
@@ -96,13 +98,13 @@ async function main () {
       }
 
       const target = `http://localhost:${port}${newPathname}${search || ''}`
-      proxyServer.web(req, res, { target, ignorePath: true })
+      proxyServer.web(req, res, {target, ignorePath: true})
       return
     }
 
     res.writeHead(404)
     res.end('Not found')
-  }).listen(programPort, (err) => {
+  }).listen(programPort, err => {
     if (err) {
       console.error(err.stack)
       process.exit(1)
@@ -112,6 +114,6 @@ async function main () {
   })
 }
 
-async function sleep (ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
