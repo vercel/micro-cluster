@@ -39,7 +39,7 @@
     "get-port": "2.1.0",
     "http-proxy": "1.15.2",
     "micro": "^6.0.2",
-    "mz": "2.4.0"
+    "mz": "2.6.0"
   },
   "devDependencies": {
     "babel-plugin-syntax-async-functions": "6.13.0",
