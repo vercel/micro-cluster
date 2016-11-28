@@ -49,7 +49,7 @@ async function main() {
     const port = service.port || await getPort()
 
     const opts = {env, stdio: 'inherit', customFds: [0, 1, 2]}
-    await spawn(resolve(__dirname, 'micro'), ['--port', port, path], opts)
+    await spawn('micro', ['--port', port, path], opts)
     services.set(id, port)
   }
 

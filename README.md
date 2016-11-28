@@ -4,6 +4,14 @@
 
 Run multiple `micro` servers and a front proxy at a time, with a simple configuration file.
 
+## Installation
+
+```console
+$ npm install -g micro
+
+$ npm install -g micro-cluster
+```
+
 ## Example
 
 Create a config file like the following.
