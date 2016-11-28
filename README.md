@@ -7,9 +7,7 @@ Run multiple `micro` servers and a front proxy at a time, with a simple configur
 ## Installation
 
 ```console
-$ npm install -g micro
-
-$ npm install -g micro-cluster
+$ npm install micro-cluster
 ```
 
 ## Example
