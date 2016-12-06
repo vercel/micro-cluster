@@ -82,9 +82,14 @@ async function main() {
 
   micro(async (req, res) => {
     const {pathname, search} = parseUrl(req.url)
+    const httpMethod = req.method
 
-    for (const {match, rewrite, proxy, proxySetHeaders} of locations) {
+    for (const {match, rewrite, proxy, proxySetHeaders, method} of locations) {
       if (!match.test(pathname)) {
+        continue
+      }
+
+      if (method !== undefined && method !== null && typeof method === 'string' && method.toUpperCase() !== httpMethod.toUpperCase()) {
         continue
       }
 
