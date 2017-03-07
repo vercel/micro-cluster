@@ -2,6 +2,7 @@
 
 import {parse as parseUrl} from 'url'
 import {dirname, resolve} from 'path'
+import {METHODS} from 'http'
 import program from 'commander'
 import {spawn} from 'mz/child_process'
 import micro from 'micro'
@@ -12,6 +13,9 @@ import presetES2015 from 'babel-preset-es2015'
 import transformAsyncToGenerator from 'babel-plugin-transform-async-to-generator'
 // eslint-disable-next-line import/no-unresolved
 import {version} from '../../package'
+
+const isHttpMethod = method => METHODS.includes(method)
+const isString = value => (typeof value === 'string')
 
 babelRegister({
   presets: [presetES2015],
@@ -40,7 +44,7 @@ async function main() {
 
   for (const id of Object.keys(config.services)) {
     let service = config.services[id]
-    if (typeof service === 'string') {
+    if (isString(service)) {
       service = {path: service}
     }
 
@@ -60,7 +64,7 @@ async function main() {
   const locations = Object.keys(config.locations)
   .map(l => {
     let location = config.locations[l]
-    if (typeof location === 'string') {
+    if (isString(location)) {
       location = {proxy: location}
     }
 
@@ -69,7 +73,17 @@ async function main() {
       null
 
     const match = new RegExp(l.replace(/\//g, '\\/'))
-    return Object.assign({}, location, {rewrite, match})
+
+    let method = []
+    if (location.method) {
+      if (isString(location.method) && isHttpMethod(location.method)) {
+        method.push(location.method)
+      } else if (Array.isArray(location.method)) {
+        method = location.method.filter(httpMethod => isHttpMethod(httpMethod))
+      }
+    }
+
+    return Object.assign({}, location, {rewrite, match, method})
   })
 
   proxyServer.on('proxyReq', (proxyReq, req) => {
@@ -82,9 +96,14 @@ async function main() {
 
   micro(async (req, res) => {
     const {pathname, search} = parseUrl(req.url)
+    const requestMethod = req.method
 
-    for (const {match, rewrite, proxy, proxySetHeaders} of locations) {
+    for (const {match, rewrite, proxy, proxySetHeaders, method} of locations) {
       if (!match.test(pathname)) {
+        continue
+      }
+
+      if (method.length > 0 && !method.includes(requestMethod)) {
         continue
       }
 
