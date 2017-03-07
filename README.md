@@ -32,5 +32,5 @@ export default {
 Run servers.
 
 ```bash
-$ micro-cluster -p 3000 app.js
+micro-cluster -p 3000 app.js
 ```
