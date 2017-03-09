@@ -37,7 +37,7 @@
     "babel-register": "6.18.0",
     "commander": "2.9.0",
     "get-port": "2.1.0",
-    "http-proxy": "1.15.2",
+    "http-proxy": "1.16.0",
     "micro": "^6.0.2",
     "mz": "2.4.0"
   },
