@@ -2,7 +2,6 @@
   "name": "micro-cluster",
   "version": "0.1.0",
   "description": "Run multiple micro servers and a front proxy at a time",
-  "private": true,
   "scripts": {
     "start": "gulp",
     "prepublish": "gulp compile",
