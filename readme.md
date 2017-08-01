@@ -1,6 +1,7 @@
 # micro-cluster
 
 [![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
+[![Slack Channel](http://zeit-slackin.now.sh/badge.svg)](https://zeit.chat/)
 
 Run multiple `micro` servers and a front proxy at a time, with a simple configuration file.
 
