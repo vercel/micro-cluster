@@ -38,7 +38,7 @@
     "commander": "2.9.0",
     "get-port": "2.1.0",
     "http-proxy": "1.15.2",
-    "micro": "^6.0.2",
+    "micro": "8.0.0",
     "mz": "2.4.0"
   },
   "devDependencies": {
@@ -53,6 +53,6 @@
     "gulp-cached": "1.1.0",
     "gulp-ext": "1.0.0",
     "gulp-task-listing": "1.0.1",
-    "xo": "^0.17.0"
+    "xo": "0.17.0"
   }
 }
