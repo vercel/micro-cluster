@@ -1,5 +1,11 @@
 # micro-cluster
 
+---
+
+**DEPRECATED:** Please use [micro-proxy](https://github.com/zeit/micro-proxy) instead. This repo right here is not maintained anymore.
+
+---
+
 [![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
 [![Slack Channel](http://zeit-slackin.now.sh/badge.svg)](https://zeit.chat/)
 
